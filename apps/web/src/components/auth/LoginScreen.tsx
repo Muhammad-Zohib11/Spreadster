@@ -48,6 +48,7 @@ export function LoginScreen() {
 
   const handleGoogleLogin = () => {
     // Open OAuth in a popup so it works inside GAS sidebar iframes
+    // App.tsx handles the token via localStorage storage event + postMessage
     const popup = window.open(
       `${API_BASE}/auth/google`,
       'spreadster_oauth',
@@ -56,17 +57,7 @@ export function LoginScreen() {
     if (!popup) {
       // Popup blocked — fall back to redirect
       window.location.href = `${API_BASE}/auth/google`;
-      return;
     }
-    // Listen for token sent back by the popup
-    const handler = (event: MessageEvent) => {
-      if (event.data?.type === 'SPREADSTER_AUTH' && event.data.token) {
-        window.removeEventListener('message', handler);
-        login(event.data.token as string, (event.data.name as string) ?? 'User');
-        popup.close();
-      }
-    };
-    window.addEventListener('message', handler);
   };
 
   return (
