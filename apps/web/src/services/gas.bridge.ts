@@ -16,6 +16,7 @@ declare const google: {
       getSpreadsheetContext: () => void;
       applyRollback: (snapshotJson: string) => void;
       showToast: (message: string, title?: string) => void;
+      gasAutoLogin: () => void;
     };
   };
 };
@@ -153,6 +154,20 @@ export const gasBridge = {
   showToast(message: string, title = 'SPREADSTER'): void {
     if (isInsideGAS()) {
       google.script.run.showToast(message, title);
+    }
+  },
+
+  /**
+   * Auto-login using the GAS session identity (no OAuth popup).
+   * Returns { success, token, user } from the backend.
+   */
+  async gasAutoLogin(): Promise<{ success: boolean; token?: string; user?: { name: string; email: string; role: string }; error?: string }> {
+    if (!isInsideGAS()) return { success: false, error: 'not in GAS' };
+    const raw = await callGAS<string>('gasAutoLogin');
+    try {
+      return JSON.parse(raw) as { success: boolean; token?: string; user?: { name: string; email: string; role: string }; error?: string };
+    } catch {
+      return { success: false, error: 'Invalid response' };
     }
   },
 };

@@ -215,3 +215,42 @@ authRouter.get('/google/callback', async (req: Request, res: Response): Promise<
     res.redirect(`/?auth_error=oauth_failed`);
   }
 });
+
+// ---- POST /api/auth/gas-login ----
+// Called by Google Apps Script using the user's Google session email.
+// The API key header acts as the shared secret.
+authRouter.post('/gas-login', async (req: Request, res: Response): Promise<void> => {
+  const apiKey = req.headers['x-api-key'];
+  const expectedKey = process.env['API_KEY'] ?? '';
+  if (!apiKey || apiKey !== expectedKey) {
+    res.status(401).json({ success: false, error: 'Unauthorized' });
+    return;
+  }
+
+  const { email } = req.body as { email?: string };
+  if (!email || typeof email !== 'string') {
+    res.status(400).json({ success: false, error: 'email required' });
+    return;
+  }
+
+  try {
+    let user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          id: uuidv4(),
+          email,
+          name: email.split('@')[0].replace(/[._]/g, ' '),
+          role: 'TEACHER',
+          isActive: true,
+        },
+      });
+    }
+    const token = generateToken(user.id, user.role, user.email);
+    await auditService.log({ type: 'USER_LOGIN', userId: user.id, success: true, ip: req.ip });
+    res.json({ success: true, token, user: { name: user.name, email: user.email, role: user.role } });
+  } catch (err) {
+    logger.error({ err }, 'GAS auto-login error');
+    res.status(500).json({ success: false, error: 'Login failed' });
+  }
+});

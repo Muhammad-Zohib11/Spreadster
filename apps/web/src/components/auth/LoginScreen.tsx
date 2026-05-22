@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { LogIn, Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
+import { gasBridge } from '@/services/gas.bridge';
 import { cn } from '@/lib/utils';
 
 const API_BASE = import.meta.env['VITE_API_BASE_URL'] ?? '/api';
@@ -12,7 +13,18 @@ export function LoginScreen() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuthStore();
+  const { login, initFromToken } = useAuthStore();
+
+  // When inside GAS sidebar, auto-login using Google Sheets session identity
+  useEffect(() => {
+    const tryGasAutoLogin = async () => {
+      const result = await gasBridge.gasAutoLogin();
+      if (result.success && result.token) {
+        initFromToken(result.token, result.user?.name ?? 'User');
+      }
+    };
+    tryGasAutoLogin();
+  }, [initFromToken]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

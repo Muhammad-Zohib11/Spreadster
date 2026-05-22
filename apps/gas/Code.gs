@@ -154,6 +154,35 @@ function applyRollback(snapshotJson) {
 }
 
 /**
+ * Auto-login using Google Sheets session identity (no OAuth popup needed).
+ * Returns JSON string: { success, token, user } or { success: false, error }
+ */
+function gasAutoLogin() {
+  try {
+    var email = Session.getActiveUser().getEmail();
+    if (!email) {
+      return JSON.stringify({ success: false, error: 'Could not get user email from session' });
+    }
+    var props = PropertiesService.getScriptProperties();
+    var apiUrl = props.getProperty('SPREADSTER_API_URL') || 'https://backend-rosy-five-71.vercel.app/api';
+    var apiKey = props.getProperty('SPREADSTER_API_KEY') || '';
+
+    var response = UrlFetchApp.fetch(apiUrl + '/auth/gas-login', {
+      method: 'post',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': apiKey
+      },
+      payload: JSON.stringify({ email: email }),
+      muteHttpExceptions: true
+    });
+    return response.getContentText();
+  } catch(e) {
+    return JSON.stringify({ success: false, error: e.toString() });
+  }
+}
+
+/**
  * Show a toast inside Google Sheets
  */
 function showToast(message, title) {
