@@ -24,17 +24,40 @@ declare const google: {
 
 function callGAS<T>(method: string, ...args: unknown[]): Promise<T> {
   return new Promise((resolve, reject) => {
-    const runner = google.script.run
-      .withSuccessHandler((result) => resolve(result as T))
-      .withFailureHandler((err) => reject(err));
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (runner as any)[method](...args);
+    const requestId = Math.random().toString(36).slice(2);
+    let settled = false;
+
+    const handler = (event: MessageEvent) => {
+      const data = event.data as { __spreadster?: boolean; requestId?: string; result?: unknown; error?: string };
+      if (!data?.__spreadster || data.requestId !== requestId) return;
+      window.removeEventListener('message', handler);
+      settled = true;
+      if (data.error) reject(new Error(data.error));
+      else resolve(data.result as T);
+    };
+
+    window.addEventListener('message', handler);
+
+    // Send request to parent Sidebar.html which has google.script.run
+    window.parent.postMessage(
+      { __spreadster: true, action: method, requestId, payload: args[0], message: args[0], title: args[1] },
+      '*'
+    );
+
+    // Timeout after 15s
+    setTimeout(() => {
+      if (!settled) {
+        window.removeEventListener('message', handler);
+        reject(new Error(`GAS call '${method}' timed out`));
+      }
+    }, 15000);
   });
 }
 
-// Check if we are running inside a GAS sidebar
+// Check if we are running inside a GAS sidebar (URL has ?gas=true injected by Sidebar.html)
 function isInsideGAS(): boolean {
-  return typeof window !== 'undefined' && typeof (window as unknown as { google?: unknown }).google !== 'undefined';
+  if (typeof window === 'undefined') return false;
+  return new URLSearchParams(window.location.search).get('gas') === 'true';
 }
 
 export const gasBridge = {

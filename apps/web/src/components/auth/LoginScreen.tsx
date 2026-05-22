@@ -13,6 +13,8 @@ export function LoginScreen() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [gasAutoLoginDone, setGasAutoLoginDone] = useState(false);
+  const isGASContext = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('gas') === 'true';
   const { login, initFromToken } = useAuthStore();
 
   // When inside GAS sidebar, auto-login using Google Sheets session identity
@@ -21,10 +23,16 @@ export function LoginScreen() {
       const result = await gasBridge.gasAutoLogin();
       if (result.success && result.token) {
         initFromToken(result.token, result.user?.name ?? 'User');
+      } else {
+        setGasAutoLoginDone(true);
       }
     };
-    tryGasAutoLogin();
-  }, [initFromToken]);
+    if (isGASContext) {
+      tryGasAutoLogin();
+    } else {
+      setGasAutoLoginDone(true);
+    }
+  }, [initFromToken, isGASContext]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,6 +79,19 @@ export function LoginScreen() {
       window.location.href = `${API_BASE}/auth/google`;
     }
   };
+
+  // Show spinner while waiting for GAS auto-login (avoids flash of login form)
+  if (!gasAutoLoginDone) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background gap-3">
+        <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+          <span className="text-lg font-black text-primary-foreground">S</span>
+        </div>
+        <Loader2 size={20} className="animate-spin text-primary" />
+        <p className="text-xs text-muted-foreground">Connecting to Google Sheets…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background p-4">

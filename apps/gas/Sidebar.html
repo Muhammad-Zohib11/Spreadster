@@ -84,12 +84,32 @@
     var loading = document.getElementById('loading');
     var errorView = document.getElementById('error-view');
 
-    // Set iframe src
-    frame.src = APP_URL;
+    // Set iframe src — append ?gas=true so the React app knows it's inside GAS
+    frame.src = APP_URL + (APP_URL.indexOf('?') >= 0 ? '&' : '?') + 'gas=true';
 
     frame.onload = function() {
       loading.style.display = 'none';
       frame.style.display = 'block';
+
+      // Get user's email from GAS session and send to React app for auto-login
+      google.script.run
+        .withSuccessHandler(function(email) {
+          if (frame.contentWindow) {
+            frame.contentWindow.postMessage(
+              { __spreadster: true, action: 'init', email: email || '' },
+              '*'
+            );
+          }
+        })
+        .withFailureHandler(function() {
+          if (frame.contentWindow) {
+            frame.contentWindow.postMessage(
+              { __spreadster: true, action: 'init', email: '' },
+              '*'
+            );
+          }
+        })
+        .getEmail();
     };
 
     frame.onerror = function() {
@@ -148,6 +168,12 @@
       } else if (action === 'showToast') {
         google.script.run.showToast(data.message, data.title);
         sendBack({ ok: true }, null);
+
+      } else if (action === 'getEmail') {
+        google.script.run
+          .withSuccessHandler(function(email) { sendBack(email || '', null); })
+          .withFailureHandler(function(err) { sendBack('', err.message || 'getEmail failed'); })
+          .getEmail();
       }
     });
 
