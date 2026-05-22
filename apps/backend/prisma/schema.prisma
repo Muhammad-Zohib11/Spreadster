@@ -1,0 +1,273 @@
+// ============================================================
+// SPREADSTER — Prisma Database Schema
+// PostgreSQL — Full college administration data model
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --------------- Users & Auth ---------------
+
+enum CollegeRole {
+  SUPER_ADMIN
+  ADMIN
+  PRINCIPAL
+  HOD
+  TEACHER
+  ACCOUNTS
+  REGISTRAR
+  LIBRARIAN
+  IT_STAFF
+}
+
+model User {
+  id           String     @id @default(uuid())
+  email        String     @unique
+  name         String
+  passwordHash String?
+  googleId     String?    @unique
+  role         CollegeRole @default(TEACHER)
+  department   String?
+  isActive     Boolean    @default(true)
+  avatarUrl    String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  sessions          Session[]
+  conversations     Conversation[]
+  operationBatches  OperationBatch[]
+  auditLogs         AuditLog[]       @relation("AuditUser")
+  checkpoints       Checkpoint[]
+
+  @@map("users")
+}
+
+model Session {
+  id          String   @id @default(uuid())
+  userId      String
+  tokenHash   String   @unique
+  expiresAt   DateTime
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  lastUsedAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@map("sessions")
+}
+
+// --------------- Conversations ---------------
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+model Conversation {
+  id             String   @id @default(uuid())
+  userId         String
+  spreadsheetId  String
+  spreadsheetName String
+  title          String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages ConversationMessage[]
+  batches  OperationBatch[]
+
+  @@index([userId])
+  @@index([spreadsheetId])
+  @@map("conversations")
+}
+
+model ConversationMessage {
+  id             String      @id @default(uuid())
+  conversationId String
+  role           MessageRole
+  content        String      @db.Text
+  timestamp      DateTime    @default(now())
+
+  // If assistant message has an associated instruction set
+  instructionSetId String?
+  operationBatchId String?
+
+  conversation   Conversation    @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  operationBatch OperationBatch? @relation(fields: [operationBatchId], references: [id])
+
+  @@index([conversationId])
+  @@map("conversation_messages")
+}
+
+// --------------- Operations ---------------
+
+enum BatchStatus {
+  PENDING
+  VALIDATING
+  EXECUTING
+  SUCCESS
+  PARTIAL_SUCCESS
+  FAILED
+  ROLLED_BACK
+}
+
+model OperationBatch {
+  id               String      @id @default(uuid())
+  userId           String
+  conversationId   String?
+  spreadsheetId    String
+  spreadsheetName  String
+
+  // The complete AI-generated instruction set (JSON)
+  instructionSet   Json
+
+  // Execution state
+  status           BatchStatus @default(PENDING)
+  operationsTotal  Int         @default(0)
+  operationsOk     Int         @default(0)
+  operationsFailed Int         @default(0)
+
+  // Timing
+  startedAt        DateTime?
+  completedAt      DateTime?
+  durationMs       Int?
+
+  // Error details
+  errorMessage     String?     @db.Text
+  failedAtIndex    Int?
+
+  // Rollback
+  rollbackId       String?
+  rolledBackAt     DateTime?
+
+  // Metadata
+  promptRaw        String      @db.Text
+  promptEnhanced   String?     @db.Text
+  aiModel          String
+  aiLatencyMs      Int?
+  tokensUsed       Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user         User                  @relation(fields: [userId], references: [id])
+  conversation Conversation?         @relation(fields: [conversationId], references: [id])
+  messages     ConversationMessage[]
+  operations   Operation[]
+  checkpoint   Checkpoint?           @relation("BatchCheckpoint")
+
+  @@index([userId])
+  @@index([spreadsheetId])
+  @@index([status])
+  @@map("operation_batches")
+}
+
+enum OperationStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  SKIPPED
+  ROLLED_BACK
+}
+
+model Operation {
+  id            String          @id @default(uuid())
+  batchId       String
+  sequenceIndex Int
+  type          String          // OperationType
+  sheetName     String?
+  description   String?
+  params        Json
+  status        OperationStatus @default(PENDING)
+  result        Json?
+  errorMessage  String?         @db.Text
+  durationMs    Int?
+  executedAt    DateTime?
+
+  batch OperationBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  @@index([batchId])
+  @@map("operations")
+}
+
+// --------------- Rollback / Checkpoints ---------------
+
+model Checkpoint {
+  id             String   @id @default(uuid())
+  userId         String
+  batchId        String?  @unique
+  spreadsheetId  String
+  description    String?
+  snapshot       Json     // Full SheetSnapshot[] array
+  createdAt      DateTime @default(now())
+  expiresAt      DateTime // auto-delete old checkpoints
+
+  user  User            @relation(fields: [userId], references: [id])
+  batch OperationBatch? @relation("BatchCheckpoint", fields: [batchId], references: [id])
+
+  @@index([spreadsheetId])
+  @@index([userId])
+  @@map("checkpoints")
+}
+
+// --------------- Audit Logs ---------------
+
+enum AuditEventType {
+  AI_PROCESS
+  OPERATION_EXECUTE
+  OPERATION_ROLLBACK
+  USER_LOGIN
+  USER_LOGOUT
+  SESSION_CREATED
+  SESSION_REVOKED
+  PERMISSION_DENIED
+  VALIDATION_FAILED
+  AI_ERROR
+  SYSTEM_ERROR
+  CONFIG_CHANGE
+}
+
+model AuditLog {
+  id               String         @id @default(uuid())
+  type             AuditEventType
+  userId           String?
+  spreadsheetId    String?
+  instructionSetId String?
+  executionId      String?
+  batchId          String?
+  success          Boolean
+  details          Json?
+  ipAddress        String?
+  userAgent        String?        @db.Text
+  timestamp        DateTime       @default(now())
+
+  user User? @relation("AuditUser", fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([type])
+  @@index([timestamp])
+  @@index([spreadsheetId])
+  @@map("audit_logs")
+}
+
+// --------------- System Config ---------------
+
+model SystemConfig {
+  key       String   @id
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+
+  @@map("system_config")
+}

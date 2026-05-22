@@ -1,0 +1,45 @@
+{
+  "name": "spreadster",
+  "version": "1.0.0",
+  "description": "AI-Powered Google Sheets Operating System for College Administration",
+  "private": true,
+  "packageManager": "npm@11.12.1",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "type-check": "turbo run type-check",
+    "web:dev": "turbo run dev --filter=web",
+    "backend:dev": "turbo run dev --filter=backend",
+    "db:push": "cd apps/backend && npx prisma db push",
+    "db:migrate": "cd apps/backend && npx prisma migrate dev",
+    "db:studio": "cd apps/backend && npx prisma studio",
+    "db:generate": "cd apps/backend && npx prisma generate",
+    "ollama:setup": "bash infrastructure/ollama/setup.sh",
+    "ollama:models": "bash infrastructure/ollama/pull-models.sh",
+    "gas:deploy": "node scripts/deploy-gas.mjs",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "turbo": "^2.3.0",
+    "typescript": "^5.4.5",
+    "@types/node": "^20.12.0",
+    "prettier": "^3.2.5"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "prettier": {
+    "semi": true,
+    "singleQuote": true,
+    "tabWidth": 2,
+    "trailingComma": "all",
+    "printWidth": 100
+  }
+}
