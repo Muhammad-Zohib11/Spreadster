@@ -51,11 +51,15 @@ export function PromptInput({ onSend, disabled, placeholder }: PromptInputProps)
 
   return (
     <div className="relative">
+      {/* Glow layer */}
+      <div className="absolute inset-0 rounded-2xl bg-primary/5 blur-xl pointer-events-none opacity-0 focus-within:opacity-100 transition-opacity duration-500" />
+
       <div
         className={cn(
-          'flex items-end gap-2 rounded-xl border bg-card transition-all',
-          'focus-within:ring-2 focus-within:ring-ring focus-within:border-primary',
-          disabled && 'opacity-60',
+          'relative flex items-end gap-2 rounded-2xl border bg-secondary/60 backdrop-blur-sm transition-all duration-200',
+          'border-border/60 hover:border-border',
+          'focus-within:border-primary/50 focus-within:shadow-lg focus-within:shadow-primary/10',
+          disabled && 'opacity-50 pointer-events-none',
         )}
       >
         {/* Textarea */}
@@ -65,22 +69,23 @@ export function PromptInput({ onSend, disabled, placeholder }: PromptInputProps)
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           disabled={disabled}
-          placeholder={placeholder ?? 'Ask me to build, format, analyze, or automate anything…'}
+          placeholder={placeholder ?? 'Ask me to build, format, analyze…'}
           rows={1}
           className={cn(
-            'flex-1 resize-none bg-transparent px-3.5 py-3 text-sm outline-none',
-            'placeholder:text-muted-foreground/60 min-h-[44px]',
-            'scrollbar-thin',
+            'flex-1 resize-none bg-transparent px-4 py-3.5 text-sm outline-none',
+            'placeholder:text-muted-foreground/40 min-h-[48px] leading-relaxed',
           )}
           style={{ height: 'auto' }}
         />
 
         {/* Send button */}
-        <div className="flex items-center gap-1 pr-2 pb-2">
+        <div className="flex items-center pr-3 pb-3">
           <AnimatePresence mode="wait">
             {disabled ? (
-              <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <Loader2 size={18} className="text-primary animate-spin" />
+              <motion.div key="loading" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>
+                <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center">
+                  <Loader2 size={14} className="text-primary animate-spin" />
+                </div>
               </motion.div>
             ) : (
               <motion.button
@@ -88,24 +93,24 @@ export function PromptInput({ onSend, disabled, placeholder }: PromptInputProps)
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
-                whileTap={{ scale: 0.9 }}
+                whileTap={{ scale: 0.88 }}
                 onClick={handleSubmit}
                 disabled={!value.trim() || disabled}
                 className={cn(
-                  'p-1.5 rounded-lg transition-all',
+                  'w-8 h-8 rounded-xl flex items-center justify-center transition-all',
                   value.trim()
-                    ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                    : 'bg-muted text-muted-foreground cursor-not-allowed',
+                    ? 'bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50'
+                    : 'bg-secondary text-muted-foreground/50 cursor-not-allowed',
                 )}
               >
-                <Send size={14} />
+                <Send size={13} />
               </motion.button>
             )}
           </AnimatePresence>
         </div>
       </div>
 
-      {/* Character count */}
+      {/* Char count */}
       <AnimatePresence>
         {isNearLimit && (
           <motion.div
@@ -113,20 +118,14 @@ export function PromptInput({ onSend, disabled, placeholder }: PromptInputProps)
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className={cn(
-              'absolute bottom-[-18px] right-1 text-[10px]',
-              charCount >= MAX_CHARS ? 'text-destructive' : 'text-muted-foreground',
+              'absolute bottom-[-16px] right-1 text-[10px]',
+              charCount >= MAX_CHARS ? 'text-destructive' : 'text-muted-foreground/50',
             )}
           >
             {charCount}/{MAX_CHARS}
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Keyboard hint */}
-      <div className="mt-1.5 flex items-center gap-1 text-[10px] text-muted-foreground/50 pl-1">
-        <Sparkles size={9} />
-        <span>Enter to send · Shift+Enter for new line</span>
-      </div>
     </div>
   );
 }

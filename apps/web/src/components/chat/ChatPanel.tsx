@@ -78,11 +78,14 @@ export function ChatPanel() {
       </div>
 
       {/* Input area */}
-      <div className="border-t border-border bg-background/80 backdrop-blur-sm px-3 py-3">
+      <div className="border-t border-border/40 bg-background px-3 py-3">
         <PromptInput
           onSend={addUserMessage}
           disabled={isLoading || isExecuting}
         />
+        <p className="text-center text-[10px] text-muted-foreground/30 mt-2">
+          ↵ Enter to send · Shift+Enter for new line
+        </p>
       </div>
     </div>
   );

@@ -83,38 +83,54 @@ export function LoginScreen() {
   // Show spinner while waiting for GAS auto-login (avoids flash of login form)
   if (!gasAutoLoginDone) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-background gap-3">
-        <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-          <span className="text-lg font-black text-primary-foreground">S</span>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background gap-4">
+        <div className="relative">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center shadow-xl shadow-indigo-500/30">
+            <span className="text-lg font-black text-white">✦</span>
+          </div>
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 blur-xl opacity-30" />
         </div>
-        <Loader2 size={20} className="animate-spin text-primary" />
-        <p className="text-xs text-muted-foreground">Connecting to Google Sheets…</p>
+        <div className="flex flex-col items-center gap-1">
+          <p className="text-sm font-semibold text-foreground">SPREADSTER</p>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Loader2 size={11} className="animate-spin" />
+            Connecting to Google Sheets…
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background p-4">
+      {/* Glow bg */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-64 h-64 bg-indigo-500/8 rounded-full blur-3xl" />
+      </div>
+
       <motion.div
-        initial={{ opacity: 0, y: 24 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="w-full max-w-sm"
+        transition={{ duration: 0.35 }}
+        className="relative w-full max-w-[280px]"
       >
         {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="w-12 h-12 rounded-xl bg-primary mx-auto flex items-center justify-center mb-3">
-            <span className="text-xl font-black text-primary-foreground">S</span>
+        <div className="text-center mb-7">
+          <div className="relative inline-flex mb-4">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center shadow-2xl shadow-indigo-500/30">
+              <span className="text-2xl">✦</span>
+            </div>
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 blur-xl opacity-25" />
           </div>
-          <h1 className="text-xl font-bold text-foreground">SPREADSTER</h1>
-          <p className="text-sm text-muted-foreground mt-1">{COLLEGE_NAME}</p>
+          <h1 className="text-lg font-bold text-foreground tracking-tight">SPREADSTER</h1>
+          <p className="text-xs text-muted-foreground mt-1">{COLLEGE_NAME}</p>
         </div>
 
-        {/* Form */}
-        <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-foreground">Email</label>
+        {/* Form card */}
+        <div className="bg-secondary/60 backdrop-blur-sm rounded-2xl border border-border/60 p-5">
+          <form onSubmit={handleLogin} className="space-y-3">
+            <div className="space-y-1">
+              <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Email</label>
               <input
                 type="email"
                 value={email}
@@ -122,16 +138,16 @@ export function LoginScreen() {
                 required
                 autoComplete="email"
                 className={cn(
-                  'w-full h-9 rounded-lg border bg-background px-3 text-sm outline-none',
-                  'focus:ring-2 focus:ring-ring focus:border-primary transition-all',
-                  'placeholder:text-muted-foreground/60',
+                  'w-full h-10 rounded-xl border border-border/60 bg-background/60 px-3 text-sm outline-none',
+                  'focus:border-primary/60 focus:ring-2 focus:ring-primary/10 transition-all',
+                  'placeholder:text-muted-foreground/40',
                 )}
                 placeholder="admin@college.edu"
               />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-foreground">Password</label>
+            <div className="space-y-1">
+              <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Password</label>
               <input
                 type="password"
                 value={password}
@@ -139,19 +155,15 @@ export function LoginScreen() {
                 required
                 autoComplete="current-password"
                 className={cn(
-                  'w-full h-9 rounded-lg border bg-background px-3 text-sm outline-none',
-                  'focus:ring-2 focus:ring-ring focus:border-primary transition-all',
+                  'w-full h-10 rounded-xl border border-border/60 bg-background/60 px-3 text-sm outline-none',
+                  'focus:border-primary/60 focus:ring-2 focus:ring-primary/10 transition-all',
                 )}
                 placeholder="••••••••"
               />
             </div>
 
             {error && (
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-xs text-destructive"
-              >
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-xs text-destructive">
                 {error}
               </motion.p>
             )}
@@ -160,9 +172,10 @@ export function LoginScreen() {
               type="submit"
               disabled={isLoading}
               className={cn(
-                'w-full h-9 rounded-lg bg-primary text-primary-foreground text-sm font-semibold',
-                'hover:bg-primary/90 transition-all flex items-center justify-center gap-2',
-                'disabled:opacity-60',
+                'w-full h-10 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2',
+                'bg-gradient-to-r from-indigo-500 to-violet-600 text-white',
+                'hover:shadow-lg hover:shadow-indigo-500/25',
+                'disabled:opacity-50',
               )}
             >
               {isLoading ? <Loader2 size={14} className="animate-spin" /> : <LogIn size={14} />}
@@ -170,20 +183,17 @@ export function LoginScreen() {
             </button>
           </form>
 
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border" />
-            </div>
-            <div className="relative flex justify-center">
-              <span className="bg-card px-2 text-xs text-muted-foreground">or</span>
-            </div>
+          <div className="flex items-center gap-2 my-3">
+            <div className="flex-1 h-px bg-border/60" />
+            <span className="text-[10px] text-muted-foreground/60">or</span>
+            <div className="flex-1 h-px bg-border/60" />
           </div>
 
           <button
             onClick={handleGoogleLogin}
             className={cn(
-              'w-full h-9 rounded-lg border border-border bg-background text-sm font-medium',
-              'hover:bg-accent hover:text-accent-foreground transition-all flex items-center justify-center gap-2',
+              'w-full h-10 rounded-xl border border-border/60 bg-background/40 text-sm font-medium',
+              'hover:border-border hover:bg-secondary/80 transition-all flex items-center justify-center gap-2',
             )}
           >
             <svg width="14" height="14" viewBox="0 0 24 24">
@@ -196,7 +206,7 @@ export function LoginScreen() {
           </button>
         </div>
 
-        <p className="text-center text-[10px] text-muted-foreground mt-4">
+        <p className="text-center text-[10px] text-muted-foreground/40 mt-4">
           Internal College Administration System
         </p>
       </motion.div>

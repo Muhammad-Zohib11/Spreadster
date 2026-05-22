@@ -38,19 +38,21 @@ export function MessageBubble({ message, onExecute, onRollback, isExecuting }: M
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, ease: 'easeOut' }}
+      transition={{ duration: 0.22, ease: 'easeOut' }}
       className={cn('flex gap-2.5 mb-4', isUser ? 'flex-row-reverse' : 'flex-row')}
     >
       {/* Avatar */}
       <div
         className={cn(
-          'flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs',
-          isUser ? 'bg-primary text-primary-foreground' : 'bg-accent text-accent-foreground',
+          'flex-shrink-0 w-7 h-7 rounded-xl flex items-center justify-center text-xs',
+          isUser
+            ? 'bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/25'
+            : 'bg-secondary border border-border/60 text-muted-foreground',
         )}
       >
-        {isUser ? <User size={13} /> : <Bot size={13} />}
+        {isUser ? <User size={12} /> : <Bot size={12} />}
       </div>
 
       {/* Bubble */}
@@ -59,8 +61,8 @@ export function MessageBubble({ message, onExecute, onRollback, isExecuting }: M
           className={cn(
             'px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed',
             isUser
-              ? 'bg-primary text-primary-foreground rounded-tr-sm'
-              : 'bg-card border border-border rounded-tl-sm',
+              ? 'bg-gradient-to-br from-indigo-500 to-violet-600 text-white rounded-tr-md shadow-lg shadow-indigo-500/20'
+              : 'bg-secondary border border-border/60 text-foreground rounded-tl-md',
           )}
         >
           {message.content}
@@ -68,7 +70,7 @@ export function MessageBubble({ message, onExecute, onRollback, isExecuting }: M
 
         {/* Warnings */}
         {message.warnings && message.warnings.length > 0 && (
-          <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
+          <div className="bg-amber-950/40 border border-amber-700/40 rounded-xl px-3 py-2 text-xs text-amber-300">
             ⚠️ {message.warnings.join(' · ')}
           </div>
         )}
@@ -76,20 +78,22 @@ export function MessageBubble({ message, onExecute, onRollback, isExecuting }: M
         {/* Instruction Set Preview */}
         {message.instructionSet && !message.executionResult && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            className="w-full bg-card border border-border rounded-xl overflow-hidden"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full bg-secondary border border-border/60 rounded-2xl overflow-hidden"
           >
-            <div className="flex items-center justify-between px-3 py-2 bg-accent/50 border-b border-border">
-              <div className="flex items-center gap-1.5 text-xs font-medium text-accent-foreground">
-                <Zap size={11} />
-                <span>{message.instructionSet.operations.length} operations ready</span>
+            <div className="flex items-center justify-between px-3 py-2.5 border-b border-border/60">
+              <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                <div className="w-5 h-5 rounded-lg bg-primary/20 flex items-center justify-center">
+                  <Zap size={10} className="text-primary" />
+                </div>
+                {message.instructionSet.operations.length} operations ready
               </div>
               <button
                 onClick={() => setShowOps((v) => !v)}
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-card transition-all"
               >
-                {showOps ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                {showOps ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
               </button>
             </div>
 
@@ -101,17 +105,13 @@ export function MessageBubble({ message, onExecute, onRollback, isExecuting }: M
                   exit={{ height: 0 }}
                   className="overflow-hidden"
                 >
-                  <div className="px-3 py-2 space-y-1 max-h-40 overflow-y-auto">
+                  <div className="px-3 py-2 space-y-1.5 max-h-40 overflow-y-auto">
                     {message.instructionSet.operations.map((op, i) => (
                       <div key={op.id} className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span className="text-primary font-mono">{i + 1}.</span>
-                        <span className="bg-secondary px-1.5 py-0.5 rounded font-mono text-[10px]">{op.type}</span>
-                        {op.sheetName && (
-                          <span className="text-[10px] opacity-70">{op.sheetName}</span>
-                        )}
-                        {op.description && (
-                          <span className="flex-1 truncate opacity-60">{op.description}</span>
-                        )}
+                        <span className="text-primary/60 font-mono w-4 text-right flex-shrink-0">{i + 1}.</span>
+                        <span className="bg-card/80 px-1.5 py-0.5 rounded-md font-mono text-[10px] border border-border/40">{op.type}</span>
+                        {op.sheetName && <span className="text-[10px] opacity-60">{op.sheetName}</span>}
+                        {op.description && <span className="flex-1 truncate opacity-50 text-[11px]">{op.description}</span>}
                       </div>
                     ))}
                   </div>
@@ -119,18 +119,19 @@ export function MessageBubble({ message, onExecute, onRollback, isExecuting }: M
               )}
             </AnimatePresence>
 
-            <div className="px-3 py-2 border-t border-border">
+            <div className="px-3 py-2.5 border-t border-border/60">
               <button
                 onClick={handleExecute}
                 disabled={isExecuting}
                 className={cn(
-                  'w-full py-1.5 rounded-lg text-xs font-semibold transition-all',
-                  'bg-primary text-primary-foreground hover:bg-primary/90',
+                  'w-full py-2 rounded-xl text-xs font-semibold transition-all',
+                  'bg-gradient-to-r from-indigo-500 to-violet-600 text-white',
+                  'hover:shadow-lg hover:shadow-indigo-500/25',
                   'disabled:opacity-50 disabled:cursor-not-allowed',
                   isExecuting && 'animate-pulse',
                 )}
               >
-                {isExecuting ? 'Executing…' : '▶ Execute in Spreadsheet'}
+                {isExecuting ? 'Executing…' : '▶  Apply to Spreadsheet'}
               </button>
             </div>
           </motion.div>
@@ -142,25 +143,24 @@ export function MessageBubble({ message, onExecute, onRollback, isExecuting }: M
             initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
             className={cn(
-              'w-full px-3 py-2 rounded-xl border text-xs',
+              'w-full px-3 py-2.5 rounded-xl border text-xs',
               message.executionResult.success
-                ? 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800'
-                : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800',
+                ? 'bg-emerald-950/30 border-emerald-700/40'
+                : 'bg-red-950/30 border-red-700/40',
             )}
           >
             <div className="flex items-center gap-1.5 font-medium mb-1">
               {message.executionResult.success ? (
-                <CheckCircle2 size={12} className="text-green-600 dark:text-green-400" />
+                <CheckCircle2 size={12} className="text-emerald-400" />
               ) : (
-                <XCircle size={12} className="text-red-600 dark:text-red-400" />
+                <XCircle size={12} className="text-red-400" />
               )}
-              <span className={message.executionResult.success ? 'text-green-800 dark:text-green-300' : 'text-red-800 dark:text-red-300'}>
-                {message.executionResult.success ? 'Executed successfully' : 'Execution failed'}
+              <span className={message.executionResult.success ? 'text-emerald-300' : 'text-red-300'}>
+                {message.executionResult.success ? 'Applied successfully' : 'Execution failed'}
               </span>
             </div>
-            <div className="text-muted-foreground space-y-0.5">
-              <div>{message.executionResult.operationsExecuted} ops completed · {message.executionResult.operationsFailed} failed</div>
-              {message.executionResult.summary && <div className="opacity-80">{message.executionResult.summary}</div>}
+            <div className="text-muted-foreground text-[11px]">
+              {message.executionResult.operationsExecuted} ops completed · {message.executionResult.operationsFailed} failed
             </div>
             {message.executionResult.rollbackId && (
               <button
@@ -175,9 +175,9 @@ export function MessageBubble({ message, onExecute, onRollback, isExecuting }: M
         )}
 
         {/* Timestamp + latency */}
-        <div className="flex items-center gap-2 text-[10px] text-muted-foreground/60">
+        <div className="flex items-center gap-2 text-[10px] text-muted-foreground/40">
           <span>{formatRelativeTime(message.timestamp)}</span>
-          {message.latencyMs && <span>AI: {formatMs(message.latencyMs)}</span>}
+          {message.latencyMs && <span>· {formatMs(message.latencyMs)}</span>}
         </div>
       </div>
     </motion.div>
