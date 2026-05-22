@@ -3,7 +3,7 @@
 // Persistent audit logging for all system events
 // ============================================================
 import { v4 as uuidv4 } from 'uuid';
-import type { AuditEvent } from '@spreadster/shared';
+import type { AuditEvent } from '../types/shared.js';
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
 

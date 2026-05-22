@@ -3,7 +3,7 @@
 // Manages spreadsheet checkpoints and rollback operations
 // ============================================================
 import { v4 as uuidv4 } from 'uuid';
-import type { Checkpoint } from '@spreadster/shared';
+import type { Checkpoint } from '../types/shared.js';
 import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
 

@@ -4,7 +4,7 @@
 // Prevents hallucinated, corrupt, or dangerous operations
 // ============================================================
 import { z } from 'zod';
-import type { InstructionSet, ValidationResult, SpreadsheetContext } from '@spreadster/shared';
+import type { InstructionSet, ValidationResult, SpreadsheetContext } from '../types/shared.js';
 import { logger } from '../lib/logger.js';
 
 // --------------- Zod Schemas ---------------

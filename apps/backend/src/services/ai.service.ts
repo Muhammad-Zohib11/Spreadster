@@ -8,7 +8,7 @@ import type {
   AIProcessResponse,
   InstructionSet,
   SpreadsheetContext,
-} from '@spreadster/shared';
+} from '../types/shared.js';
 import { aiProviderService } from './ai-provider.service.js';
 import { promptService } from './prompt.service.js';
 import { validationService } from './validation.service.js';

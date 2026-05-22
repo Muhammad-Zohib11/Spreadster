@@ -8,7 +8,7 @@ import type {
   OllamaChatRequest,
   OllamaChatResponse,
   OllamaModel,
-} from '@spreadster/shared';
+} from '../types/shared.js';
 import { logger } from '../lib/logger.js';
 
 const OLLAMA_BASE_URL = process.env['OLLAMA_BASE_URL'] ?? 'http://localhost:11434';

@@ -3,7 +3,7 @@
 // Builds system prompts that guide the LLM to produce
 // valid, safe, structured JSON instruction sets
 // ============================================================
-import type { SpreadsheetContext, OllamaChatMessage } from '@spreadster/shared';
+import type { SpreadsheetContext, OllamaChatMessage } from '../types/shared.js';
 
 // --------------- Operation Type Reference ---------------
 // Injected into the system prompt so the model knows exactly
