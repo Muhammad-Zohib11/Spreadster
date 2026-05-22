@@ -14,8 +14,14 @@ export default function App() {
     const token = params.get('token');
     const name = params.get('name');
     if (token) {
+      if (window.opener) {
+        // Running inside OAuth popup — send token back to parent window and close
+        window.opener.postMessage({ type: 'SPREADSTER_AUTH', token, name }, '*');
+        window.close();
+        return;
+      }
+      // Running as top-level window — handle token directly
       initFromToken(token, name ?? 'User');
-      // Remove token from URL without page reload
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, [initFromToken]);

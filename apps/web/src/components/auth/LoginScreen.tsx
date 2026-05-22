@@ -47,7 +47,26 @@ export function LoginScreen() {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = `${API_BASE}/auth/google`;
+    // Open OAuth in a popup so it works inside GAS sidebar iframes
+    const popup = window.open(
+      `${API_BASE}/auth/google`,
+      'spreadster_oauth',
+      'width=520,height=620,left=200,top=100,resizable=yes,scrollbars=yes'
+    );
+    if (!popup) {
+      // Popup blocked — fall back to redirect
+      window.location.href = `${API_BASE}/auth/google`;
+      return;
+    }
+    // Listen for token sent back by the popup
+    const handler = (event: MessageEvent) => {
+      if (event.data?.type === 'SPREADSTER_AUTH' && event.data.token) {
+        window.removeEventListener('message', handler);
+        login(event.data.token as string, (event.data.name as string) ?? 'User');
+        popup.close();
+      }
+    };
+    window.addEventListener('message', handler);
   };
 
   return (
