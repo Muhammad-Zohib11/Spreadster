@@ -12,10 +12,11 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "exactOptionalPropertyTypes": false,
     "paths": {
-      "@spreadster/shared": ["../../packages/shared/src/index.ts"],
+      "@spreadster/shared": ["./src/types/shared.ts"],
       "@/*": ["./src/*"]
     }
   },

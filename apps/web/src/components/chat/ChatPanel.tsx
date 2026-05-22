@@ -29,8 +29,8 @@ export function ChatPanel() {
           success: result.success,
           operationsExecuted: result.operationsExecuted,
           operationsFailed: result.operationsFailed,
-          summary: result.success ? instructionSet.summary : result.error,
           rollbackId: result.rollbackId,
+          error: result.success ? undefined : result.error,
         },
       });
     } finally {
