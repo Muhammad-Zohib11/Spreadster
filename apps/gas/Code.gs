@@ -4,7 +4,7 @@
 // ============================================================
 
 var SPREADSTER_VERSION = '1.0.0';
-var SIDEBAR_URL = 'YOUR_VERCEL_FRONTEND_URL'; // e.g. https://spreadster.vercel.app
+var SIDEBAR_URL = 'https://web-eight-alpha-20.vercel.app'; // Production frontend
 var API_KEY = PropertiesService.getScriptProperties().getProperty('SPREADSTER_API_KEY') || '';
 
 // ============================================================
