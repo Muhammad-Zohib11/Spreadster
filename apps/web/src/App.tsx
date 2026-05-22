@@ -71,6 +71,25 @@ export default function App() {
     }
   }, [isAuthenticated, initFromToken]);
 
+  // Poll localStorage every 500ms — most reliable method for sandboxed GAS iframes
+  // where storage events and postMessage may be blocked
+  useEffect(() => {
+    if (isAuthenticated) return;
+    const poll = setInterval(() => {
+      try {
+        const raw = localStorage.getItem(OAUTH_STORAGE_KEY);
+        if (raw) {
+          const { token, name } = JSON.parse(raw) as { token: string; name: string };
+          if (token) {
+            initFromToken(token, name ?? 'User');
+            localStorage.removeItem(OAUTH_STORAGE_KEY);
+          }
+        }
+      } catch {}
+    }, 500);
+    return () => clearInterval(poll);
+  }, [isAuthenticated, initFromToken]);
+
   // Handle token in URL when running as a top-level window (non-popup fallback)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
