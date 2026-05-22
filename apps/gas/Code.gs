@@ -12,6 +12,8 @@ var API_KEY = PropertiesService.getScriptProperties().getProperty('SPREADSTER_AP
 // ============================================================
 
 function onOpen() {
+  // Accessing Session here triggers the OAuth authorization dialog on first run
+  try { Session.getActiveUser().getEmail(); } catch(e) {}
   SpreadsheetApp.getUi()
     .createMenu('🤖 SPREADSTER AI')
     .addItem('Open AI Assistant', 'openSidebar')
@@ -150,6 +152,18 @@ function applyRollback(snapshotJson) {
     return { success: true };
   } catch(e) {
     return { success: false, error: e.toString() };
+  }
+}
+
+/**
+ * Returns the active user's Google email for auto-login.
+ * The React app calls the backend directly using this email + VITE_API_KEY.
+ */
+function getEmail() {
+  try {
+    return Session.getActiveUser().getEmail() || '';
+  } catch(e) {
+    return '';
   }
 }
 

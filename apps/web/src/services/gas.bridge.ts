@@ -17,6 +17,7 @@ declare const google: {
       applyRollback: (snapshotJson: string) => void;
       showToast: (message: string, title?: string) => void;
       gasAutoLogin: () => void;
+      getEmail: () => void;
     };
   };
 };
@@ -159,15 +160,30 @@ export const gasBridge = {
 
   /**
    * Auto-login using the GAS session identity (no OAuth popup).
-   * Returns { success, token, user } from the backend.
+   * Calls getEmail() in GAS, then hits the backend directly from React.
    */
   async gasAutoLogin(): Promise<{ success: boolean; token?: string; user?: { name: string; email: string; role: string }; error?: string }> {
     if (!isInsideGAS()) return { success: false, error: 'not in GAS' };
-    const raw = await callGAS<string>('gasAutoLogin');
     try {
-      return JSON.parse(raw) as { success: boolean; token?: string; user?: { name: string; email: string; role: string }; error?: string };
-    } catch {
-      return { success: false, error: 'Invalid response' };
+      // Step 1: Get user's email from GAS session (no UrlFetchApp needed)
+      const email = await callGAS<string>('getEmail');
+      if (!email) return { success: false, error: 'Could not get user email from GAS session' };
+
+      // Step 2: Call backend directly from React using VITE env vars (already deployed to Vercel)
+      const apiBase = (import.meta.env['VITE_API_BASE_URL'] as string | undefined) ?? 'https://backend-rosy-five-71.vercel.app/api';
+      const apiKey = (import.meta.env['VITE_API_KEY'] as string | undefined) ?? '';
+
+      const res = await fetch(`${apiBase}/auth/gas-login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': apiKey,
+        },
+        body: JSON.stringify({ email }),
+      });
+      return (await res.json()) as { success: boolean; token?: string; user?: { name: string; email: string; role: string }; error?: string };
+    } catch (err) {
+      return { success: false, error: String(err) };
     }
   },
 };
