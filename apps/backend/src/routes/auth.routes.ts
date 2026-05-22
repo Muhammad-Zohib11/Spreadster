@@ -207,7 +207,7 @@ authRouter.get('/google/callback', async (req: Request, res: Response): Promise<
     await auditService.log({ type: 'USER_LOGIN', userId: user.id, success: true, ip: req.ip });
 
     // Redirect to frontend with token
-    const frontendUrl = process.env['ALLOWED_ORIGINS']?.split(',')[0] ?? 'http://localhost:5173';
+    const frontendUrl = process.env['FRONTEND_URL'] ?? process.env['ALLOWED_ORIGINS']?.split(',').find(o => o.includes('vercel.app')) ?? 'http://localhost:5173';
     res.clearCookie('oauth_state');
     res.redirect(`${frontendUrl}?token=${encodeURIComponent(jwtToken)}&name=${encodeURIComponent(user.name)}`);
   } catch (err) {
